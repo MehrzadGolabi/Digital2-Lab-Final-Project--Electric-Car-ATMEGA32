@@ -1,0 +1,94 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+twi_tx_index                                                                      0x02C3       1
+twi_rx_index                                                                      0x02C4       1
+twi_result                                                                        0x02C5       1
+seconds                                                                           0x02C6       2
+minutes                                                                           0x02C8       2
+hours                                                                             0x02CA       2
+second_flag                                                                       0x02CC       2
+current_menu                                                                      0x02CE       2
+baseSpeed                                                                         0x02D0       4
+scaledSpeed                                                                       0x02D4       4
+steer_offset                                                                      0x02D8       4
+offsetScaled                                                                      0x02DC       4
+leftSpeedVal                                                                      0x02E0       4
+rightSpeedVal                                                                     0x02E4       4
+lcd_timer_on                                                                      0x02E8       1
+buffer                                                                            0x02E9      17
+buffer2                                                                           0x02FA      17
+temp                                                                              0x030B       2
+directionFlag                                                                     0x030D       2
+int_button_used                                                                   0x030F       1
+turn_brake_light                                                                  0x0310       1
+toggle                                                                            0x0311       2
+toggle_4                                                                          0x0313       2
+buffer_time                                                                       0x0315      17
+firstKey                                                                          0x0326       2
+secondKey                                                                         0x0328       2
+count                                                                             0x032A       2
+slave_address                                                                     0x032C       1
+twi_tx_buffer                                                                     0x032D       2
+bytes_to_tx                                                                       0x032F       1
+twi_rx_buffer                                                                     0x0330       2
+bytes_to_rx                                                                       0x0332       1
+twi_rx_buffer_size                                                                0x0333       1
+twi_slave_rx_handler                                                              0x0334       2
+twi_slave_tx_handler                                                              0x0336       2
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+fuel_level                                                                        R4,R5        2
+speed_value                                                                       R6,R7        2
+steering_value                                                                    R8,R9        2
+brake_applied                                                                     R10,R11      2
+headlights_on                                                                     R12,R13      2
+twi_flag                                                                          R2.0      1bit
+twi_ready                                                                         R2.1      1bit
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+twi_lcd_write                                                                     0x0014B     19
+lcd_send_nibble                                                                   0x0015E     30
+lcd_send_byte                                                                     0x0017C     13
+lcd_cmd                                                                           0x00189      6
+lcd_data                                                                          0x0018F      6
+lcd_init                                                                          0x00195     35
+lcd_print                                                                         0x001B8     15
+lcd_gotoxy                                                                        0x001C7     30
+display_time_on_lcd                                                               0x001E5     41
+lm75_write_register                                                               0x0020E     48
+lm75_write_config                                                                 0x0023E     15
+lm75_set_tos                                                                      0x0024D     17
+lm75_read_temp                                                                    0x0025E     60
+read_keypad_2x2                                                                   0x0029A     42
+read_keypad_2x2_debounced                                                         0x002C4     33
+update_fuel_usage                                                                 0x002E5     14
+beep_when_reverse                                                                 0x002F3     22
+setLeftMotorDirection                                                             0x00309     26
+setLeftMotorSpeed                                                                 0x00323     18
+setRightMotorSpeed                                                                0x00335     18
+setRightMotorDirection                                                            0x00347     27
+ext_int2_isr                                                                      0x00362     16
+timer0_ovf_isr                                                                    0x00372     83
+read_adc                                                                          0x003C5     14
+updateMotorControl                                                                0x003D3    297
+main                                                                              0x004FC    412
+putchar                                                                           0x00698      7
+put_usart_G100                                                                    0x0069F      9
+put_buff_G100                                                                     0x006A8     56
+_print_G100                                                                       0x006E0    308
+sprintf                                                                           0x00814     46
+printf                                                                            0x00842     31
+twi_master_init                                                                   0x00861     41
+twi_master_trans                                                                  0x0088A    107
+twi_int_handler                                                                   0x008F5    357
+strlen                                                                            0x00A5A     12
+strlenf                                                                           0x00A66     13
