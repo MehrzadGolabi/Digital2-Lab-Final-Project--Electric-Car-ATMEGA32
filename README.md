@@ -24,4 +24,4 @@ Each category consists of several parts that do the necessary functions:
 2. i2c scanner
 3. oscilloscope 
 
-![[Az_digital2_400249049.png]]
+![image](https://github.com/MehrzadGolabi/Digital2-Lab-Final-Project--Electric-Car-ATMEGA32/blob/main/Az_digital2_400249049.png)
