@@ -36,12 +36,12 @@ Data Stack size         : 512
 #define LM75_I2C_ADDR      0x4B
 
 volatile int seconds = 0, minutes = 0, hours = 0;
-volatile int second_flag = 0;  // <--- ADDED: signals when 1 second passed
+volatile int second_flag = 0;  // updates when 1 second passed
 
 int fuel_level          = 100;
 int speed_value         = 0;  // from ADC (PA0)
 int steering_value      = 0;  // from ADC (PA1)
-//int direction           = 0;  // 0=Stop, 1=FWD, -1=REV
+//int direction           = 0;  // 0=Stop, 1=forward, -1=reverse
 int brake_applied       = 0;
 int headlights_on       = 0;
 int current_menu        = 0;
@@ -51,19 +51,20 @@ long int steer_offset   = 0;
 long int offsetScaled   = 0;
 long int leftSpeedVal   = 0;
 long int rightSpeedVal  = 0;
-#define PWM_TOP 40000 
+#define PWM_TOP 10000   // value of ICR1 to calculate pwm duty cycle
 bool lcd_timer_on       = false;
-char buffer[17];
-char buffer2[17];
+char buffer[20];
+//char buffer2[20];
 int temp                = 0;
-int directionFlag       = 0;   // -1 => rev, 0 => stop, +1 => fwd
+int directionFlag       = 0;   // -1 => reverse, 0 => stop, +1 => forward
 bool int_button_used    = false;
 bool turn_brake_light   = false;
 static int toggle       = 0;
 int toggle_4            = 0;
-char buffer_time[17];  // Enough for "HH:MM:SS" plus a null terminator
+char buffer_time[20];  // Enough for "HH:MM:SS"
 int firstKey;
 int secondKey;
+bool timer_toggle = true;
 
 
 
@@ -140,9 +141,10 @@ void lcd_data(int data)
 
 void lcd_init(void)
 {
+    // Wait for LCD power-up
     delay_ms(20);
 
-    // HD44780 spec init: send 0x30 (8-bit mode) three times
+    // Per HD44780 init sequence: send 0x30 (8-bit mode) thrice
     lcd_send_nibble(0x30, 0);
     delay_ms(5);
     lcd_send_nibble(0x30, 0);
@@ -150,22 +152,28 @@ void lcd_init(void)
     lcd_send_nibble(0x30, 0);
     delay_us(100);
 
-    // Switch to 4-bit mode
+    // Switch to 4-bit mode (0x20 = 4-bit)
     lcd_send_nibble(0x20, 0);
     delay_us(100);
 
-    // 4-bit, 2 lines, 5x8
+    // Function Set: 4-bit interface, 2 (or 4) lines, 5x8 font.
+    // Even for a 20×4, set N=1 => 0x28
     lcd_cmd(0x28);
-    // Display off
+
+    // Display off (D=0, C=0, B=0)
     lcd_cmd(0x08);
-    // Clear
+
+    // Clear display
     lcd_cmd(0x01);
     delay_ms(2);
-    // Entry mode: increment, no shift
+
+    // Entry mode set: increment cursor, no shift (I/D=1, S=0)
     lcd_cmd(0x06);
-    // Display on, cursor off
+
+    // Display on, cursor off, blink off (D=1, C=0, B=0 => 0x0C)
     lcd_cmd(0x0C);
 }
+
 
 // Print a string at the current cursor
 void lcd_print(char *str)
@@ -175,17 +183,31 @@ void lcd_print(char *str)
 }
 
 // Move cursor to (col, row) on a 16×2 display
+// Move cursor to (col, row) on a 20×4 display
 void lcd_gotoxy(int col, int row)
 {
     int address;
-    switch (row)
+
+    // Common DDRAM mapping for a 20×4 LCD:
+    // Row0 => 0x00
+    // Row1 => 0x40
+    // Row2 => 0x14
+    // Row3 => 0x54
+    switch(row)
     {
-        case 0: address = 0x00 + col; break; // row 0 base: 0x00
-        case 1: address = 0x40 + col; break; // row 1 base: 0x40
-        default: address = 0x00; break;
+        case 0: address = 0x00; break;
+        case 1: address = 0x40; break;
+        case 2: address = 0x14; break;
+        case 3: address = 0x54; break;
+        default: address = 0x00; // fallback if row is out of range
     }
+
+    address += col; // add the column offset
+
+    // Send "Set DDRAM address" command
     lcd_cmd(0x80 | address);
 }
+
 
 
 //-------------------------Menus codes -----------------------------------------------------
@@ -197,7 +219,7 @@ void display_time_on_lcd(void)
     sprintf(buffer_time, "%02d:%02d:%02d", hours, minutes, seconds);
 
     // place it at row=0, col=0
-    lcd_gotoxy(0, 0);
+    lcd_gotoxy(0, 3);
     lcd_print("Time: ");
     lcd_print(buffer_time);
 }
@@ -530,7 +552,7 @@ void updateMotorControl(void)
     if(baseSpeed < 0) baseSpeed = -baseSpeed; // just in case
 
     // Scale to 0..PWM_TOP
-    // e.g. baseSpeed * PWM_TOP / 511
+    // baseSpeed * PWM_TOP / 511
     scaledSpeed = (baseSpeed * PWM_TOP) / 511;
     if(scaledSpeed < 0) scaledSpeed = 0;
     if(scaledSpeed > PWM_TOP) scaledSpeed = PWM_TOP;
@@ -597,6 +619,19 @@ void updateMotorControl(void)
     }
 }
 
+void lcd_display(void){
+                    sprintf(buffer,"speed:   %d", speed_value);
+                    lcd_gotoxy(0,0);
+                    lcd_print(buffer);
+                    sprintf(buffer,"temp:   %d", temp);
+                    lcd_gotoxy(0,1);     
+                    lcd_print(buffer);
+                    sprintf(buffer,"fuel:   %d", fuel_level);
+                    lcd_gotoxy(0,2);
+                    lcd_print(buffer);
+                    if(timer_toggle){
+                    display_time_on_lcd();}
+}
 
 void main(void)
 {
@@ -663,16 +698,44 @@ OCR0=0x00;
 // Input Capture Interrupt: Off
 // Compare A Match Interrupt: Off
 // Compare B Match Interrupt: Off
-TCCR1A=(1<<COM1A1) | (1<<COM1A0) | (1<<COM1B1) | (1<<COM1B0) | (0<<WGM11) | (0<<WGM10);
-TCCR1B=(0<<ICNC1) | (0<<ICES1) | (1<<WGM13) | (0<<WGM12) | (0<<CS12) | (1<<CS11) | (0<<CS10);
+//TCCR1A=(1<<COM1A1) | (1<<COM1A0) | (1<<COM1B1) | (1<<COM1B0) | (0<<WGM11) | (0<<WGM10);
+//TCCR1B=(0<<ICNC1) | (0<<ICES1) | (1<<WGM13) | (0<<WGM12) | (0<<CS12) | (1<<CS11) | (0<<CS10);
+//TCNT1H=0x00;
+//TCNT1L=0x00;
+//ICR1H=0xC3;
+//ICR1L=0x50;
+//OCR1AH=0xC3;
+//OCR1AL=0x50;
+//OCR1BH=0xC3;
+//OCR1BL=0x50;
+
+// Timer/Counter 1 initialization
+// Clock source: System Clock
+// Clock value: 1000.000 kHz
+// Mode: Fast PWM top=ICR1
+// OC1A output: Non-Inverted PWM
+// OC1B output: Non-Inverted PWM
+// Noise Canceler: Off
+// Input Capture on Falling Edge
+// Timer Period: 10 ms
+// Output Pulse(s):
+// OC1A Period: 10 ms Width: 0 us
+// OC1B Period: 10 ms Width: 0 us
+// Timer1 Overflow Interrupt: Off
+// Input Capture Interrupt: Off
+// Compare A Match Interrupt: Off
+// Compare B Match Interrupt: Off
+TCCR1A=(1<<COM1A1) | (0<<COM1A0) | (1<<COM1B1) | (0<<COM1B0) | (1<<WGM11) | (0<<WGM10);
+TCCR1B=(0<<ICNC1) | (0<<ICES1) | (1<<WGM13) | (1<<WGM12) | (0<<CS12) | (1<<CS11) | (0<<CS10);
 TCNT1H=0x00;
 TCNT1L=0x00;
-ICR1H=0xC3;
-ICR1L=0x50;
-OCR1AH=0xC3;
-OCR1AL=0x50;
-OCR1BH=0xC3;
-OCR1BL=0x50;
+ICR1H=0x27;
+ICR1L=0x10;
+OCR1AH=0x00;
+OCR1AL=0x00;
+OCR1BH=0x00;
+OCR1BL=0x00;
+
 }
 // Timer(s)/Counter(s) Interrupt(s) initialization
 TIMSK=(0<<OCIE2) | (0<<TOIE2) | (0<<TICIE1) | (0<<OCIE1A) | (0<<OCIE1B) | (0<<TOIE1) | (0<<OCIE0) | (1<<TOIE0);
@@ -732,21 +795,19 @@ SFIOR=(0<<ADTS2) | (0<<ADTS1) | (0<<ADTS0);
 // Print initial message
 {
     lcd_gotoxy(0, 0);
-    lcd_print("System Init...\r\n");
+    lcd_print(" System Init...\r\n");
     lcd_gotoxy(0, 1);
-    lcd_print("Tcrit=70C");
-    delay_ms(1000);
+    lcd_print(" Tcrit=70C");
     lcd_cmd(0x01); // Clear     
     lcd_print(" MehrzadGolabi");
     lcd_gotoxy(0, 1);
-    lcd_print("AZ Digital2 prj");
-    delay_ms(1000);
-    lcd_cmd(0x01); // Clear
-    lcd_print(" Use the buttons");
-    lcd_gotoxy(0, 1);
-    lcd_print("to navigate menu");
+    lcd_print(" AZ Digital2 prj");
+    lcd_gotoxy(0, 2);
+    lcd_print(" SBU");
+    lcd_gotoxy(0, 3);
+    lcd_print(" 1403");
     delay_ms(1500);
-    //lcd_cmd(0x01); // Clear
+    lcd_cmd(0x01); // Clear
  
 }
 
@@ -772,24 +833,19 @@ while (1)
             switch(key)
             {
                 case 1:
-                    current_menu++;
-                    if(current_menu>4) current_menu=0;
-                    printf("[DBG] Key1 => menu=%d\r\n", current_menu);
+                    printf("[DBG] Key1\r\n");
                     lcd_cmd(0x01);
                 break;
 
                 case 2:
-                    current_menu--;
-                    lcd_timer_on = false;
-                    if(current_menu<0) current_menu=4;
-                    printf("[DBG] Key2 => menu=%d\r\n", current_menu);
+                    timer_toggle=!(timer_toggle);
+                    printf("[DBG] Key2\r\n");
                     lcd_cmd(0x01);
                 break;
 
                 case 3:
                     // Toggle headlights (PD6)
                     headlights_on = !headlights_on;
-                    lcd_timer_on = false;
                     if(headlights_on)
                         PORTD |=  (1<<6);
                     else
@@ -800,7 +856,6 @@ while (1)
 
                 case 4:
                     toggle_4=!toggle_4;
-                    lcd_timer_on = false;
                     if(toggle_4)
                         PORTC |=  (1<<6);
                     else
@@ -831,62 +886,58 @@ while (1)
        }
 
        // LCD logic
-        if(second_flag)
+        if(second_flag) // handle menu updates once per second
         {
             second_flag = 0;  // reset the flag
-
-            // If lcd_timer_on => show time
-            if(lcd_timer_on)
-            {
-                display_time_on_lcd();
-            }
-
-            // We also handle menu updates once per second
-            switch(current_menu)
-            {
-                case 1:
-                    lcd_timer_on = true;
-                break;
-
-                case 2:
-                    lcd_timer_on = false;
-                    sprintf(buffer,"speed:   %d", speed_value);
-                    lcd_gotoxy(0,0);
-                    lcd_print(buffer);
-
-                    sprintf(buffer2,"menu=   %d", current_menu);
-                    lcd_gotoxy(0,1);
-                    lcd_print(buffer2);
-                break;
-
-                case 3:
-                    lcd_timer_on = false;
-                    sprintf(buffer,"temp:   %d", temp);
-                    lcd_gotoxy(0,0);     
-                    lcd_print(buffer);
-
-                    sprintf(buffer2,"menu=   %d", current_menu);
-                    lcd_gotoxy(0,1);
-                    lcd_print(buffer2);
-                break;
-
-                case 4:
-                    lcd_timer_on = false;
-                    sprintf(buffer,"fuel:   %d", fuel_level);
-                    lcd_gotoxy(0,0);
-                    lcd_print(buffer);
-
-                    sprintf(buffer2,"menu=   %d", current_menu);
-                    lcd_gotoxy(0,1);
-                    lcd_print(buffer2);
-                break;
-
-                default:
-                    // No menu
-                    lcd_cmd(0x01);
-                    lcd_timer_on = false;
-                break;
-            }
+            lcd_display();           
+                                   
+//            switch(current_menu)
+//            {
+//                case 1:
+//                    lcd_timer_on = true;
+//                break;
+//
+//                case 2:
+//                    lcd_timer_on = false;
+//                    sprintf(buffer,"speed:   %d", speed_value);
+//                    lcd_gotoxy(0,0);
+//                  lcd_print(buffer);
+//
+//                    sprintf(buffer2,"menu=   %d", current_menu);
+//                    lcd_gotoxy(0,1);
+//                    lcd_print(buffer2);
+//                break;
+//
+//                case 3:
+//                    lcd_timer_on = false;
+//                    sprintf(buffer,"temp:   %d", temp);
+//                    lcd_gotoxy(0,0);     
+//                    lcd_print(buffer);
+//
+//                    sprintf(buffer2,"menu=   %d", current_menu);
+//                    lcd_gotoxy(0,1);
+//                    lcd_print(buffer2);
+//                break;
+//
+//                case 4:
+//                    lcd_timer_on = false;
+//                    sprintf(buffer,"fuel:   %d", fuel_level);
+//                    lcd_gotoxy(0,0);
+//                    lcd_print(buffer);
+//
+//                    sprintf(buffer2,"menu=   %d", current_menu);
+//                    lcd_gotoxy(0,1);
+//                    lcd_print(buffer2);
+//                break;
+//
+//                default:
+//                    // No menu
+//                    lcd_timer_on = false;
+//                break;
+//            }
+        
+       
+        
         }
        
 
@@ -894,3 +945,5 @@ while (1)
       
       }
 }
+
+
