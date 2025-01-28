@@ -44,7 +44,7 @@ int steering_value      = 0;  // from ADC (PA1)
 //int direction           = 0;  // 0=Stop, 1=forward, -1=reverse
 int brake_applied       = 0;
 int headlights_on       = 0;
-int current_menu        = 0;
+//int current_menu        = 0;
 long int baseSpeed      = 0;
 long int scaledSpeed    = 0;
 long int steer_offset   = 0;
@@ -52,7 +52,7 @@ long int offsetScaled   = 0;
 long int leftSpeedVal   = 0;
 long int rightSpeedVal  = 0;
 #define PWM_TOP 10000   // value of ICR1 to calculate pwm duty cycle
-bool lcd_timer_on       = false;
+//bool lcd_timer_on       = false;
 char buffer[20];
 //char buffer2[20];
 int temp                = 0;

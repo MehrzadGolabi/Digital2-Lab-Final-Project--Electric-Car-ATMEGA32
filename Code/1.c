@@ -889,55 +889,7 @@ while (1)
         if(second_flag) // handle menu updates once per second
         {
             second_flag = 0;  // reset the flag
-            lcd_display();           
-                                   
-//            switch(current_menu)
-//            {
-//                case 1:
-//                    lcd_timer_on = true;
-//                break;
-//
-//                case 2:
-//                    lcd_timer_on = false;
-//                    sprintf(buffer,"speed:   %d", speed_value);
-//                    lcd_gotoxy(0,0);
-//                  lcd_print(buffer);
-//
-//                    sprintf(buffer2,"menu=   %d", current_menu);
-//                    lcd_gotoxy(0,1);
-//                    lcd_print(buffer2);
-//                break;
-//
-//                case 3:
-//                    lcd_timer_on = false;
-//                    sprintf(buffer,"temp:   %d", temp);
-//                    lcd_gotoxy(0,0);     
-//                    lcd_print(buffer);
-//
-//                    sprintf(buffer2,"menu=   %d", current_menu);
-//                    lcd_gotoxy(0,1);
-//                    lcd_print(buffer2);
-//                break;
-//
-//                case 4:
-//                    lcd_timer_on = false;
-//                    sprintf(buffer,"fuel:   %d", fuel_level);
-//                    lcd_gotoxy(0,0);
-//                    lcd_print(buffer);
-//
-//                    sprintf(buffer2,"menu=   %d", current_menu);
-//                    lcd_gotoxy(0,1);
-//                    lcd_print(buffer2);
-//                break;
-//
-//                default:
-//                    // No menu
-//                    lcd_timer_on = false;
-//                break;
-//            }
-        
-       
-        
+            lcd_display();                   
         }
        
 

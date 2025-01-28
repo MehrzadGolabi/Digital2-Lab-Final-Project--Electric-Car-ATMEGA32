@@ -2240,67 +2240,19 @@ _0xF:
 ;PCODE: $0000050C VOL: 1
 ; 0000 037C             lcd_display();
 ;PCODE: $0000050D VOL: 0
-; 0000 037D 
-; 0000 037E //            switch(current_menu)
-; 0000 037F //            {
-; 0000 0380 //                case 1:
-; 0000 0381 //                    lcd_timer_on = true;
-; 0000 0382 //                break;
-; 0000 0383 //
-; 0000 0384 //                case 2:
-; 0000 0385 //                    lcd_timer_on = false;
-; 0000 0386 //                    sprintf(buffer,"speed:   %d", speed_value);
-; 0000 0387 //                    lcd_gotoxy(0,0);
-; 0000 0388 //                  lcd_print(buffer);
-; 0000 0389 //
-; 0000 038A //                    sprintf(buffer2,"menu=   %d", current_menu);
-; 0000 038B //                    lcd_gotoxy(0,1);
-; 0000 038C //                    lcd_print(buffer2);
-; 0000 038D //                break;
-; 0000 038E //
-; 0000 038F //                case 3:
-; 0000 0390 //                    lcd_timer_on = false;
-; 0000 0391 //                    sprintf(buffer,"temp:   %d", temp);
-; 0000 0392 //                    lcd_gotoxy(0,0);
-; 0000 0393 //                    lcd_print(buffer);
-; 0000 0394 //
-; 0000 0395 //                    sprintf(buffer2,"menu=   %d", current_menu);
-; 0000 0396 //                    lcd_gotoxy(0,1);
-; 0000 0397 //                    lcd_print(buffer2);
-; 0000 0398 //                break;
-; 0000 0399 //
-; 0000 039A //                case 4:
-; 0000 039B //                    lcd_timer_on = false;
-; 0000 039C //                    sprintf(buffer,"fuel:   %d", fuel_level);
-; 0000 039D //                    lcd_gotoxy(0,0);
-; 0000 039E //                    lcd_print(buffer);
-; 0000 039F //
-; 0000 03A0 //                    sprintf(buffer2,"menu=   %d", current_menu);
-; 0000 03A1 //                    lcd_gotoxy(0,1);
-; 0000 03A2 //                    lcd_print(buffer2);
-; 0000 03A3 //                break;
-; 0000 03A4 //
-; 0000 03A5 //                default:
-; 0000 03A6 //                    // No menu
-; 0000 03A7 //                    lcd_timer_on = false;
-; 0000 03A8 //                break;
-; 0000 03A9 //            }
-; 0000 03AA 
-; 0000 03AB 
-; 0000 03AC 
-; 0000 03AD         }
-; 0000 03AE 
-; 0000 03AF 
-; 0000 03B0         delay_ms(100);
+; 0000 037D         }
+; 0000 037E 
+; 0000 037F 
+; 0000 0380         delay_ms(100);
 ;PCODE: $0000050E VOL: 0
 ;PCODE: $0000050F VOL: 0
 ;PCODE: $00000510 VOL: 0
 ;PCODE: $00000511 VOL: 0
-; 0000 03B1 
-; 0000 03B2       }
+; 0000 0381 
+; 0000 0382       }
 ;PCODE: $00000512 VOL: 0
 ;PCODE: $00000513 VOL: 0
-; 0000 03B3 }
+; 0000 0383 }
 ;PCODE: $00000514 VOL: 0
 ;PCODE: $00000515 VOL: 0
 ;PCODE: $00000516 VOL: 0
